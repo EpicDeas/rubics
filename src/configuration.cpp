@@ -80,19 +80,19 @@ void move (rubics_config* c)
   auto eo2 = get_edge_ori<EB>(c);
   auto eo3 = get_edge_ori<EC>(c);
   auto eo4 = get_edge_ori<ED>(c);
-  set_edge_ori<EA>(c, eo4);
-  set_edge_ori<EB>(c, eo1);
-  set_edge_ori<EC>(c, eo2);
-  set_edge_ori<ED>(c, eo3);
+  set_edge_ori<EA>(c, flip_edge_ori(eo1);
+  set_edge_ori<EB>(c, flip_edge_ori(eo2);
+  set_edge_ori<EC>(c, eo3);
+  set_edge_ori<ED>(c, eo4);
   // vertex orientations
   auto vo1 = get_vertex_ori<VA>(c);
   auto vo2 = get_vertex_ori<VB>(c);
   auto vo3 = get_vertex_ori<VC>(c);
   auto vo4 = get_vertex_ori<VD>(c);
-  set_vertex_ori<EA>(c, vo4);
-  set_vertex_ori<EB>(c, vo1);
-  set_vertex_ori<EC>(c, vo2);
-  set_vertex_ori<ED>(c, vo3);
+  set_vertex_ori<VA>(c, vo1);
+  set_vertex_ori<VB>(c, vo2);
+  set_vertex_ori<VC>(c, vo3);
+  set_vertex_ori<VD>(c, vo4);
 }
 
 void move_F (rubics_config* c, size_t count)
@@ -104,13 +104,13 @@ void move_F (rubics_config* c, size_t count)
 void move_B (rubics_config* c, size_t count)
 {
   move<2, 7, 10, 6,
-       2, 3, 7,  6>(c);
+       2, 3,  7, 6>(c);
 }
 
 void move_L (rubics_config* c, size_t count)
 {
   move<3, 4, 11, 7,
-       0, 4, 7,  3>(c);
+       0, 4,  7, 3>(c);
 }
 
 void move_R (rubics_config* c, size_t count)
@@ -128,5 +128,5 @@ void move_U (rubics_config* c, size_t count)
 void move_D (rubics_config* c, size_t count)
 {
   move<8, 9, 10, 11,
-       4, 5, 6,  7>(c);
+       4, 5,  6, 7>(c);
 }
