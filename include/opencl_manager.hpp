@@ -5,7 +5,12 @@
 
 class OpenCLManager
 {
-
+private:
+  cl::Context context;
+  cl::CommandQueue queue;
+  cl::Program program;
+public:
+  OpenCLManager();
 };
 
 #endif

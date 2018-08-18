@@ -3,11 +3,14 @@
 #include <vector>
 #include <algorithm>
 #include <iterator>
+#include <iostream>
+#include <fstream>
 
 #include "configuration.hpp"
 
 void cmd_switch(const std::string& cmd, rubics_config* c)
 {
+  log::write("Applying command: " + cmd + '\n');
   // number of turns
   auto count = 1;
   if (cmd.size() > 1)
@@ -17,16 +20,15 @@ void cmd_switch(const std::string& cmd, rubics_config* c)
     else
       count = 3;
   }
-
   // which command
   switch (cmd[0])
   {
-    case 'F': move_F(c, count);
-    case 'B': move_B(c, count);
-    case 'L': move_L(c, count);
-    case 'R': move_R(c, count);
-    case 'U': move_U(c, count);
-    case 'D': move_D(c, count);
+    case 'F': move_F(c, count); break;
+    case 'B': move_B(c, count); break;
+    case 'L': move_L(c, count); break;
+    case 'R': move_R(c, count); break;
+    case 'U': move_U(c, count); break;
+    case 'D': move_D(c, count); break;
   }
 }
 
@@ -35,14 +37,14 @@ rubics_config parse_rubics(std::string line)
   std::vector<std::string> tokens;
 
   // split into tokens
-  std::istringstream iss(line);
+  std::istringstream iss{ line };
   std::copy(
     std::istream_iterator<std::string>(iss),
     std::istream_iterator<std::string>(),
     std::back_inserter(tokens));
   
   // start with solved rubics cube
-  auto config = SOLVED_CONFIG;
+  auto config{ SOLVED_CONFIG };
 
   // apply commands one by one
   for(const auto& cmd : tokens)
@@ -51,11 +53,25 @@ rubics_config parse_rubics(std::string line)
   return config;
 }
 
-// move implementations
+inline cl_uint flip_edge_ori (cl_uint a)
+{
+  return a ^ 1;
+}
 
+inline cl_uint add_vertex_ori (cl_uint a)
+{
+  return (a + 1) % 3;
+}
+
+inline cl_uint drop_vertex_ori (cl_uint a)
+{
+  return (a + 2) % 3;
+}
+
+// move implementations
 template <int EA, int EB, int EC, int ED,
           int VA, int VB, int VC, int VD>
-void move (rubics_config* c)
+void move_pos (rubics_config* c, bool flip_edges, int vertex_ori_pattern)
 {
   // edge positions
   auto e1 = get_edge_pos<EA>(c);
@@ -75,58 +91,86 @@ void move (rubics_config* c)
   set_vertex_pos<VB>(c, v1);
   set_vertex_pos<VC>(c, v2);
   set_vertex_pos<VD>(c, v3);
-  // edge orientations
-  auto eo1 = get_edge_ori<EA>(c);
-  auto eo2 = get_edge_ori<EB>(c);
-  auto eo3 = get_edge_ori<EC>(c);
-  auto eo4 = get_edge_ori<ED>(c);
-  set_edge_ori<EA>(c, flip_edge_ori(eo1);
-  set_edge_ori<EB>(c, flip_edge_ori(eo2);
-  set_edge_ori<EC>(c, eo3);
-  set_edge_ori<ED>(c, eo4);
-  // vertex orientations
-  auto vo1 = get_vertex_ori<VA>(c);
-  auto vo2 = get_vertex_ori<VB>(c);
-  auto vo3 = get_vertex_ori<VC>(c);
-  auto vo4 = get_vertex_ori<VD>(c);
-  set_vertex_ori<VA>(c, vo1);
-  set_vertex_ori<VB>(c, vo2);
-  set_vertex_ori<VC>(c, vo3);
-  set_vertex_ori<VD>(c, vo4);
+
+  if (flip_edges)
+  {
+    auto eo1 = get_edge_ori<EA>(c);
+    auto eo2 = get_edge_ori<EB>(c);
+    auto eo3 = get_edge_ori<EC>(c);
+    auto eo4 = get_edge_ori<ED>(c);
+    set_edge_ori<EB>(c, flip_edge_ori(eo1));
+    set_edge_ori<EC>(c, flip_edge_ori(eo2));
+    set_edge_ori<ED>(c, flip_edge_ori(eo3));
+    set_edge_ori<EA>(c, flip_edge_ori(eo4));
+  }
+
+  if (vertex_ori_pattern > 0) 
+  {
+    auto vo1 = get_vertex_ori<VA>(c);
+    auto vo2 = get_vertex_ori<VB>(c);
+    auto vo3 = get_vertex_ori<VC>(c);
+    auto vo4 = get_vertex_ori<VD>(c);
+    if (vertex_ori_pattern == 1)
+    {
+      set_vertex_ori<VB>(c, add_vertex_ori(vo1));
+      set_vertex_ori<VC>(c, drop_vertex_ori(vo2));
+      set_vertex_ori<VD>(c, add_vertex_ori(vo3));
+      set_vertex_ori<VA>(c, drop_vertex_ori(vo4));
+    } 
+    else
+    {
+      set_vertex_ori<VB>(c, drop_vertex_ori(vo1));
+      set_vertex_ori<VC>(c, add_vertex_ori(vo2));
+      set_vertex_ori<VD>(c, drop_vertex_ori(vo3));
+      set_vertex_ori<VA>(c, add_vertex_ori(vo4));
+    }
+  }
 }
 
 void move_F (rubics_config* c, size_t count)
 {
-  move<0, 5, 8, 4,
-       0, 1, 5, 4>(c);
+  log::write("move_F\n");
+  for (; count; --count)
+    move_pos<2, 5, 8, 4,
+             2, 5, 4, 3>(c, true, 1);
 }
 
 void move_B (rubics_config* c, size_t count)
 {
-  move<2, 7, 10, 6,
-       2, 3,  7, 6>(c);
+  log::write("move_B\n");
+  for (; count; --count)
+    move_pos<0, 7, 10, 6,
+             0, 7,  6, 1>(c, true, 1);
 }
 
 void move_L (rubics_config* c, size_t count)
 {
-  move<3, 4, 11, 7,
-       0, 4,  7, 3>(c);
+  log::write("move_L\n");
+  for (; count; --count)
+    move_pos<3, 4, 11, 7,
+             0, 3,  4, 7>(c, false, 2);
 }
 
 void move_R (rubics_config* c, size_t count)
 {
-  move<1, 6, 9, 5,
-       1, 2, 6, 5>(c);
+  log::write("move_R\n");
+  for (; count; --count)
+    move_pos<1, 6, 9, 5,
+             1, 6, 5, 2>(c, false, 1);
 }
 
 void move_U (rubics_config* c, size_t count)
 {
-  move<0, 3, 2, 1,
-       0, 3, 2, 1>(c);
+  log::write("move_U\n");
+  for (; count; --count)
+    move_pos<0, 1, 2, 3,
+             0, 1, 2, 3>(c, false, 0);
 }
 
 void move_D (rubics_config* c, size_t count)
 {
-  move<8, 9, 10, 11,
-       4, 5,  6, 7>(c);
+  log::write("move_D\n");
+  for (; count; --count)
+    move_pos<8, 9, 10, 11,
+             4, 5,  6, 7>(c, false, 0);
 }

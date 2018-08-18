@@ -1,0 +1,40 @@
+Applying command: R2
+move_R
+Applying command: U
+move_U
+Applying command: B2
+move_B
+Applying command: R2
+move_R
+Applying command: D'
+move_D
+Applying command: B
+move_B
+Applying command: F'
+move_F
+Applying command: R
+move_R
+Applying command: D
+move_D
+Applying command: U
+move_U
+Applying command: B
+move_B
+Applying command: L
+move_L
+Applying command: U
+move_U
+Applying command: L
+move_L
+Applying command: D
+move_D
+Applying command: R
+move_R
+Applying command: F2
+move_F
+Applying command: R'
+move_R
+Applying command: D'
+move_D
+Applying command: R'
+move_R
