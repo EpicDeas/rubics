@@ -71,27 +71,27 @@ typename std::enable_if<( N >= 9 && N < 12 )>::type* = 0) // SFINAE
 // get_vertex_pos *******************************
 template <int N>
 inline cl_uint get_vertex_pos (rubics_config* c,
-typename std::enable_if<(N < 3)>::type* = 0) // SFINAE
+typename std::enable_if<(N < 2)>::type* = 0) // SFINAE
 {
   return (c->s[0] >> (12 + N * 3)) & first_bits[3];
 }
 
 template <int N>
 inline cl_uint get_vertex_pos (rubics_config* c,
-typename std::enable_if<(N >= 3 && N < 6)>::type* = 0) // SFINAE
+typename std::enable_if<(N >= 2 && N < 4)>::type* = 0) // SFINAE
 {
   return (c->s[1] >> (12 + (N - 2) * 3)) & first_bits[3];
 }
 
 template <int N>
 inline cl_uint get_vertex_pos (rubics_config* c,
-typename std::enable_if<(N >= 6 && N < 9)>::type* = 0) // SFINAE
+typename std::enable_if<(N >= 4 && N < 6)>::type* = 0) // SFINAE
 {
   return (c->s[2] >> (12 + (N - 4) * 3)) & first_bits[3];
 }
 template <int N>
 inline cl_uint get_vertex_pos (rubics_config* c,
-typename std::enable_if<(N >= 9 && N < 12)>::type* = 0) // SFINAE
+typename std::enable_if<(N >= 6 && N < 8)>::type* = 0) // SFINAE
 {
   return (c->s[3] >> (12 + (N - 6) * 3)) & first_bits[3];
 }

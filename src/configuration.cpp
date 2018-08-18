@@ -8,17 +8,17 @@
 
 #include "configuration.hpp"
 
-void cmd_switch(const std::string& cmd, rubics_config* c)
+void cmd_switch(const std::string& cmd, rubics_config* c, bool reverse = false)
 {
   log::write("Applying command: " + cmd + '\n');
   // number of turns
-  auto count = 1;
+  auto count = reverse ? 3 : 1;
   if (cmd.size() > 1)
   {
     if (cmd[1] == '2')
       count = 2;
     else
-      count = 3;
+      count = reverse ? 1 : 3;
   }
   // which command
   switch (cmd[0])
@@ -47,8 +47,17 @@ rubics_config parse_rubics(std::string line)
   auto config{ SOLVED_CONFIG };
 
   // apply commands one by one
-  for(const auto& cmd : tokens)
+  for (const auto& cmd : tokens)
     cmd_switch(cmd, &config);
+
+  // sanity check
+  log::write("starting sanity check\n");
+  for(auto it = tokens.rbegin(); it != tokens.rend(); it++)
+    cmd_switch(*it, &config, true);
+  if (config == SOLVED_CONFIG)
+    log::write("Sanity check passed!\n");
+  else 
+    log::write("Sanity check failed!\n");
 
   return config;
 }
@@ -74,7 +83,7 @@ template <int EA, int EB, int EC, int ED,
 void move_pos (rubics_config* c, bool flip_edges, int vertex_ori_pattern)
 {
   // edge positions
-  auto e1 = get_edge_pos<EA>(c);
+  auto e1 = get_edge_pos<EA>(c); 
   auto e2 = get_edge_pos<EB>(c);
   auto e3 = get_edge_pos<EC>(c);
   auto e4 = get_edge_pos<ED>(c);
@@ -91,6 +100,10 @@ void move_pos (rubics_config* c, bool flip_edges, int vertex_ori_pattern)
   set_vertex_pos<VB>(c, v1);
   set_vertex_pos<VC>(c, v2);
   set_vertex_pos<VD>(c, v3);
+  std::stringstream ss;
+  ss << e1 << ' ' << e2 << ' ' << e3 << ' '<< e4 << ' ' <<
+        v1 << ' ' << v2 << ' ' << v3 << ' '<< v4;
+  log::write(ss.str() + '\n');
 
   if (flip_edges)
   {
@@ -129,7 +142,7 @@ void move_pos (rubics_config* c, bool flip_edges, int vertex_ori_pattern)
 
 void move_F (rubics_config* c, size_t count)
 {
-  log::write("move_F\n");
+  log::write("move_F * " + std::to_string(count) + '\n');
   for (; count; --count)
     move_pos<2, 5, 8, 4,
              2, 5, 4, 3>(c, true, 1);
@@ -137,7 +150,7 @@ void move_F (rubics_config* c, size_t count)
 
 void move_B (rubics_config* c, size_t count)
 {
-  log::write("move_B\n");
+  log::write("move_B * " + std::to_string(count) + '\n');
   for (; count; --count)
     move_pos<0, 7, 10, 6,
              0, 7,  6, 1>(c, true, 1);
@@ -145,7 +158,7 @@ void move_B (rubics_config* c, size_t count)
 
 void move_L (rubics_config* c, size_t count)
 {
-  log::write("move_L\n");
+  log::write("move_L * " + std::to_string(count) + '\n');
   for (; count; --count)
     move_pos<3, 4, 11, 7,
              0, 3,  4, 7>(c, false, 2);
@@ -153,7 +166,7 @@ void move_L (rubics_config* c, size_t count)
 
 void move_R (rubics_config* c, size_t count)
 {
-  log::write("move_R\n");
+  log::write("move_R * " + std::to_string(count) + '\n');
   for (; count; --count)
     move_pos<1, 6, 9, 5,
              1, 6, 5, 2>(c, false, 1);
@@ -161,7 +174,7 @@ void move_R (rubics_config* c, size_t count)
 
 void move_U (rubics_config* c, size_t count)
 {
-  log::write("move_U\n");
+  log::write("move_U * " + std::to_string(count) + '\n');
   for (; count; --count)
     move_pos<0, 1, 2, 3,
              0, 1, 2, 3>(c, false, 0);
@@ -169,7 +182,7 @@ void move_U (rubics_config* c, size_t count)
 
 void move_D (rubics_config* c, size_t count)
 {
-  log::write("move_D\n");
+  log::write("move_D * " + std::to_string(count) + '\n');
   for (; count; --count)
     move_pos<8, 9, 10, 11,
              4, 5,  6, 7>(c, false, 0);

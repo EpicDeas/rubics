@@ -22,12 +22,23 @@ public:
   }
 };
 
+inline bool operator==(const rubics_config& left, const rubics_config& right)
+{
+  for (int i = 0; i < 4; ++i)
+  {
+    if (left.s[i] != right.s[i])
+      return false;
+  }
+  return true;
+}
+
 // representation of solved cube
+
 constexpr rubics_config SOLVED_CONFIG {
-  0b0000'0001'0010'000'001'000'00'00,
-  0b0011'0100'0101'010'011'000'00'00,
-  0b0110'0111'1000'100'101'000'00'00,
-  0b1001'1010'1011'110'111'000'00'00
+  0b00'00'000'001'000'0010'0001'0000,
+  0b00'00'000'011'010'0101'0100'0011,
+  0b00'00'000'101'100'1000'0111'0110,
+  0b00'00'000'111'110'1011'1010'1001
 };
 
 rubics_config parse_rubics(std::string line);
