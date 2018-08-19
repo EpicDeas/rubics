@@ -2,7 +2,8 @@
 #include <algorithm>
 #include <fstream>
 
-#include "rubics.hpp"
+#include "opencl_manager.hpp"
+#include "configuration.hpp"
 
 // Rubics cube has 8 vertices and 12 edges.
 // That is 20 positions to describe in total.
@@ -17,7 +18,7 @@ int main(int argc, char** argv)
     std::cerr << "Specify filename with scramble as a cmd parameter.\n";
     return 1;
   }
-
+          
   std::string filename(argv[1]), line;
   std::ifstream ifs(filename);
   std::getline(ifs, line);
@@ -25,6 +26,6 @@ int main(int argc, char** argv)
   rubics_config config = parse_rubics(line);
 
   // initialize OpenCL
-  OpenCLManager cl_mng;
+  OpenCLManager cl_mng(config);
   return 0;
 }

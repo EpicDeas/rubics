@@ -62,19 +62,24 @@ rubics_config parse_rubics(std::string line)
   return config;
 }
 
-inline cl_uint flip_edge_ori (cl_uint a)
+int evaluate(rubics_config* c)
 {
-  return a ^ 1;
-}
-
-inline cl_uint add_vertex_ori (cl_uint a)
-{
-  return (a + 1) % 3;
-}
-
-inline cl_uint drop_vertex_ori (cl_uint a)
-{
-  return (a + 2) % 3;
+  int diff = 0;
+  for (int i = 0; i < 4; ++i)
+  {
+    auto temp = c->s[i] ^ SOLVED_CONFIG.s[i];
+    for (int j = 0; j < 3; ++j)
+    {
+      diff += temp & edge_pos_mask[j] ? 1 : 0;
+      diff += temp & edge_ori_mask[j] ? 1 : 0;
+    }
+    for (int j = 0; j < 2; ++j)
+    {
+      diff += temp & vertex_pos_mask[j] ? 1 : 0;
+      diff += temp & vertex_ori_mask[j] ? 1 : 0;
+    }
+  }
+  return diff;
 }
 
 // move implementations
@@ -100,10 +105,6 @@ void move_pos (rubics_config* c, bool flip_edges, int vertex_ori_pattern)
   set_vertex_pos<VB>(c, v1);
   set_vertex_pos<VC>(c, v2);
   set_vertex_pos<VD>(c, v3);
-  std::stringstream ss;
-  ss << e1 << ' ' << e2 << ' ' << e3 << ' '<< e4 << ' ' <<
-        v1 << ' ' << v2 << ' ' << v3 << ' '<< v4;
-  log::write(ss.str() + '\n');
 
   if (flip_edges)
   {

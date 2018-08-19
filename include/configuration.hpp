@@ -4,6 +4,7 @@
 #include <array>
 #include <string>
 #include <fstream>
+#include <iostream>
 
 #include "opencl_manager.hpp"
 #include "bit_mask.hpp"
@@ -32,6 +33,12 @@ inline bool operator==(const rubics_config& left, const rubics_config& right)
   return true;
 }
 
+inline std::ostream& operator<<(std::ostream& s, const rubics_config& c)
+{
+  return s << c.s[0] << '\n' << c.s[1] << '\n'
+           << c.s[2] << '\n' << c.s[3] << '\n';
+}
+
 // representation of solved cube
 
 constexpr rubics_config SOLVED_CONFIG {
@@ -41,6 +48,8 @@ constexpr rubics_config SOLVED_CONFIG {
   0b00'00'000'111'110'1011'1010'1001
 };
 
+int evaluate(rubics_config* c);
+
 rubics_config parse_rubics(std::string line);
 
 void move_F (rubics_config* c, size_t count);
@@ -49,5 +58,21 @@ void move_L (rubics_config* c, size_t count);
 void move_R (rubics_config* c, size_t count);
 void move_U (rubics_config* c, size_t count);
 void move_D (rubics_config* c, size_t count);
+
+
+inline cl_uint flip_edge_ori (cl_uint a)
+{
+  return a ^ 1;
+}
+
+inline cl_uint add_vertex_ori (cl_uint a)
+{
+  return (a + 1) % 3;
+}
+
+inline cl_uint drop_vertex_ori (cl_uint a)
+{
+  return (a + 2) % 3;
+}
 
 #endif
