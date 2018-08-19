@@ -130,7 +130,6 @@ void OpenCLManager::compute_round()
                in_offset < BUFFER_SIZES[level];
                in_offset += WORKGROUP_SIZE)
       {
-        log::write("Executing level " + std::to_string(level) + '\n');
         for (int functor_index = 0; functor_index < 6; ++functor_index)
         {
           for (int count = 0; count < 3; ++count)
