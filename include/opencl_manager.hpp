@@ -2,7 +2,6 @@
 #define OPENCL_MANAGER
 
 #include <vector>
-#include <memory>
 
 #define __CL_ENABLE_EXCEPTIONS
 #include <CL/cl.hpp>
@@ -19,18 +18,20 @@
 
 class OpenCLManager
 {
-  using move_functor_t = cl::make_kernel<cl::Buffer, cl::Buffer, cl::Buffer, const int>;
+  using move_functor_t = cl::make_kernel<cl::Buffer, cl::Buffer, int, const int, const int>;
 private:
   cl::Context      context;
   cl::CommandQueue queue;
   cl::Program      program;
-  std::unique_ptr<cl::Buffer> main_pool;
 
+  std::vector<cl::Buffer> buffer_pool;
   std::vector<move_functor_t> move_functor;
+
+  rubics_config init_config;
 
 public:
   OpenCLManager(const rubics_config& c);
-  void compute_rounds(int count);
+  void compute_round();
 };
 
 #endif

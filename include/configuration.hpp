@@ -48,6 +48,13 @@ constexpr rubics_config SOLVED_CONFIG {
   0b00'00'000'111'110'1011'1010'1001
 };
 
+constexpr rubics_config EMPTY_CONFIG {
+  0b00'00'000'000'000'0000'0000'0000,
+  0b00'00'000'000'000'0000'0000'0000,
+  0b00'00'000'000'000'0000'0000'0000,
+  0b00'00'000'000'000'0000'0000'0000
+};
+
 int evaluate(rubics_config* c);
 
 rubics_config parse_rubics(std::string line);

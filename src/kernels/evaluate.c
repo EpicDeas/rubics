@@ -1,3 +1,10 @@
+// last 7 bits of c.w contain the evaluation
+
+#define EVAL_MASK (127 << 25)
+
+#define WRITE_EVAL(c, eval)\
+  c->w = (c->w & ~EVAL_MASK) | (eval << 25);
+
 // these numbers were obtained from the host constant SOLVED_CONFIG
 #define SOLVED_CONFIG\
   ((rubics_config)(33296, 107843, 182390, 256937))
@@ -15,7 +22,7 @@
     diff += temp & VERTEX_ORI(j) ? 1 : 0;\
   }
 
-uint evaluate(rubics_config* c)
+void evaluate(rubics_config* c)
 {
   uint diff = 0;
   uint temp;
@@ -25,5 +32,5 @@ uint evaluate(rubics_config* c)
   ADD_DIFF(z)
   ADD_DIFF(w)
   
-  return diff;
+  WRITE_EVAL(c, diff)
 }

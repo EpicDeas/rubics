@@ -4,23 +4,23 @@
 #define MOVE(X, EA, EB, EC, ED, VA, VB, VC, VD, edge_ori, vertex_ori)\
 __kernel                                                             \
 void move_##X(                                                       \
-  __global const uint4* restrict in,                                 \
-  __global       uint4* restrict out_config,                         \
-  __global       uint*  restrict out_eval,                           \
-  const int N)                                                       \
+  __global const rubics_config* restrict in,                         \
+  __global       rubics_config* restrict out,                        \
+  int count,                                                         \
+  const int in_offset,                                               \
+  const int out_offset)                                              \
 {                                                                    \
   int gid = get_global_id(0);                                        \
-  if (gid < N)                                                       \
-  {                                                                  \
-    rubics_config config = in[gid];                                  \
                                                                      \
-    move(EA, EB, EC, ED,                                             \
-         VA, VB, VC, VD,                                             \
-         &config, edge_ori, vertex_ori);                             \
+  rubics_config config = in[gid + in_offset];                        \
                                                                      \
-    out_config[gid] = config;                                        \
-    out_eval[gid]   = evaluate(&config);                             \
-  }                                                                  \
+  for (; count; --count)                                             \
+  move(EA, EB, EC, ED,                                               \
+       VA, VB, VC, VD,                                               \
+       &config, edge_ori, vertex_ori);                               \
+                                                                     \
+  evaluate(&config);                                                 \
+  out[gid + out_offset] = config;                                    \
 }
 
 MOVE(F, 2, 5, 8, 4,

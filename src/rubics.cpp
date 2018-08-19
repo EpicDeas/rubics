@@ -26,6 +26,9 @@ int main(int argc, char** argv)
   rubics_config config = parse_rubics(line);
 
   // initialize OpenCL
-  OpenCLManager cl_mng(config);
+  OpenCLManager mng(config);
+
+  // run
+  mng.compute_round();
   return 0;
 }
