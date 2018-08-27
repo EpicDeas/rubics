@@ -32,6 +32,7 @@ private:
 public:
   OpenCLManager(const rubics_config& c);
   void compute_round();
+  bool move_correctness_check();
 };
 
 #endif

@@ -5,6 +5,7 @@
 #include <string>
 #include <fstream>
 #include <iostream>
+#include <functional>
 
 #include "opencl_manager.hpp"
 #include "bit_mask.hpp"
@@ -31,6 +32,17 @@ inline bool operator==(const rubics_config& left, const rubics_config& right)
       return false;
   }
   return true;
+}
+
+inline bool equal_no_eval(const rubics_config& left, const rubics_config& right)
+{
+  auto left_no_eval = left;
+  left_no_eval.s[0] = left_no_eval.s[0] & first_bits_no_eval;
+
+  auto right_no_eval = right;
+  right_no_eval.s[0] = right_no_eval.s[0] & first_bits_no_eval;
+
+  return left_no_eval == right_no_eval;
 }
 
 inline std::ostream& operator<<(std::ostream& s, const rubics_config& c)
@@ -66,6 +78,15 @@ void move_R (rubics_config* c, size_t count);
 void move_U (rubics_config* c, size_t count);
 void move_D (rubics_config* c, size_t count);
 
+const std::array<std::string, 6>
+move_kernel_names {
+  "move_F", "move_B", "move_L", "move_R", "move_U", "move_D"
+};
+
+const std::array<std::function<void(rubics_config*, size_t)>, 6>
+host_move_functors {
+  move_F, move_B, move_L, move_R, move_U, move_D
+};
 
 inline cl_uint flip_edge_ori (cl_uint a)
 {

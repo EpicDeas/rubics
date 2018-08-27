@@ -5,12 +5,11 @@
 #define WRITE_EVAL(c, eval)\
   c->w = (c->w & ~EVAL_MASK) | (eval << 25);
 
-// these numbers were obtained from the host constant SOLVED_CONFIG
 #define SOLVED_CONFIG\
   ((rubics_config)(33296, 107843, 182390, 256937))
 
-#define ADD_DIFF(X)                      \
-  temp = c->X ^ SOLVED_CONFIG.X;         \
+#define ADD_DIFF(c,d,X)                  \
+  temp = c->X ^ d->X;                    \
   for (uint j = 0; j < 3; ++j)           \
   {                                      \
     diff += temp & EDGE_POS(j) ? 1 : 0;  \
@@ -22,15 +21,27 @@
     diff += temp & VERTEX_ORI(j) ? 1 : 0;\
   }
 
-void evaluate(rubics_config* c)
+uint compute_diff(
+  rubics_config* c,
+  __constant const rubics_config* d)
 {
   uint diff = 0;
   uint temp;
 
-  ADD_DIFF(x)
-  ADD_DIFF(y)
-  ADD_DIFF(z)
-  ADD_DIFF(w)
+  ADD_DIFF(c,d,x)
+  ADD_DIFF(c,d,y)
+  ADD_DIFF(c,d,z)
+  ADD_DIFF(c,d,w)
   
+  return diff;
+}
+
+void evaluate(rubics_config* c)
+{
+  uint diff = 100;
+  
+  for (int i = 0; i < CLOSE_CONFIGS_COUNT; ++i)
+    diff = min(diff, compute_diff(c, &CLOSE_CONFIGS[i]));
+
   WRITE_EVAL(c, diff)
 }

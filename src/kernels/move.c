@@ -18,7 +18,7 @@ inline uint drop_vertex_ori (uint a)
 }
 
 #define GET_EDGE_POS_P(N, c, P)\
-  (c->P >> (N * 4)) & 15
+  (c->P >> ((N) * 4)) & 15
 
 uint get_edge_pos(int N, rubics_config* c)
 {
@@ -33,7 +33,7 @@ uint get_edge_pos(int N, rubics_config* c)
 }
 
 #define GET_VERTEX_POS_P(N, c, P)\
-  (c->P >> (12 + (N * 3))) & 7
+  (c->P >> (12 + ((N) * 3))) & 7
 
 uint get_vertex_pos(int N, rubics_config* c)
 {
@@ -48,7 +48,7 @@ uint get_vertex_pos(int N, rubics_config* c)
 }
 
 #define GET_EDGE_ORI_P(N, c, P)\
-  (c->P >> (18 + N)) & 1
+  (c->P >> (18 + (N))) & 1
 
 uint get_edge_ori(int N, rubics_config* c)
 {
@@ -63,7 +63,7 @@ uint get_edge_ori(int N, rubics_config* c)
 }
 
 #define GET_VERTEX_ORI_P(N, c, P)\
-  (c->P >> (21 + (N * 2))) & 3
+  (c->P >> (21 + ((N) * 2))) & 3
 
 uint get_vertex_ori(int N, rubics_config* c)
 {
@@ -78,7 +78,7 @@ uint get_vertex_ori(int N, rubics_config* c)
 }
 
 #define SET_EDGE_POS_P(N, c, e, P)\
-  c->P = (e << (N * 4)) | (c->P & ~EDGE_POS(N))
+  c->P = (e << ((N) * 4)) | (c->P & ~EDGE_POS(N))
 
 void set_edge_pos(int N, rubics_config* c, uint e)
 {
@@ -93,7 +93,7 @@ void set_edge_pos(int N, rubics_config* c, uint e)
 }
 
 #define SET_VERTEX_POS_P(N, c, v, P)\
-  c->P = (v << (12 + (N * 3))) | (c->P & ~VERTEX_POS(N))
+  c->P = (v << (12 + ((N) * 3))) | (c->P & ~VERTEX_POS(N))
 
 void set_vertex_pos(int N, rubics_config* c, uint v)
 {
@@ -108,7 +108,7 @@ void set_vertex_pos(int N, rubics_config* c, uint v)
 }
 
 #define SET_EDGE_ORI_P(N, c, e, P)\
-  c->P = (e << (18 + N)) | (c->P & ~EDGE_ORI(N))
+  c->P = (e << (18 + (N))) | (c->P & ~EDGE_ORI(N))
 
 void set_edge_ori(int N, rubics_config* c, uint e)
 {
@@ -123,7 +123,7 @@ void set_edge_ori(int N, rubics_config* c, uint e)
 }
 
 #define SET_VERTEX_ORI_P(N, c, v, P)\
-  c->P = (v << (21 + (N * 2))) | (c->P & ~VERTEX_ORI(N))
+  c->P = (v << (21 + ((N) * 2))) | (c->P & ~VERTEX_ORI(N))
 
 void set_vertex_ori(int N, rubics_config* c, uint v)
 {
@@ -142,7 +142,7 @@ void move(
   int EA, int EB, int EC, int ED,
   int VA, int VB, int VC, int VD, 
   rubics_config* c,
-  bool flip_edges,
+  int flip_edges,
   int vertex_ori_pattern)
 {
   uint e1 = get_edge_pos(EA, c);

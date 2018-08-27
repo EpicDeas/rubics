@@ -4,7 +4,6 @@
 #include <array>
 #include <string>
 #include <random>
-#include <functional>
 #include <assert.h>
 
 #define __CL_ENABLE_EXCEPTIONS
@@ -28,16 +27,6 @@ constexpr std::array<size_t, 5> BUFFER_SIZES {
 
 constexpr size_t MAIN_BUFFER_SIZE = 111151 * WORKGROUP_SIZE;
 
-const std::array<std::string, 6>
-move_kernel_names {
-  "move_F", "move_B", "move_L", "move_R", "move_U", "move_D"
-};
-
-const std::array<std::function<void(rubics_config*, size_t)>, 6>
-host_move_functors {
-  move_F, move_B, move_L, move_R, move_U, move_D
-};
-
 std::vector<rubics_config> init_pool_vec(rubics_config c)
 {
   // populate the main pool with some initial configurations
@@ -48,10 +37,10 @@ std::vector<rubics_config> init_pool_vec(rubics_config c)
   vec[0] = c;
 
   // init randomness
-    std::mt19937 rng;
-    rng.seed(0);
-    std::uniform_int_distribution<std::mt19937::result_type> dist_move(0,5);
-    std::uniform_int_distribution<std::mt19937::result_type> dist_count(1,3);
+  std::mt19937 rng;
+  rng.seed(0); // for now the seed is deterministic
+  std::uniform_int_distribution<std::mt19937::result_type> dist_move(0,5);
+  std::uniform_int_distribution<std::mt19937::result_type> dist_count(1,3);
   // obtain random number by dist(rng)
 
   for (int i = 1; i < WORKGROUP_SIZE; ++i)
@@ -89,7 +78,10 @@ OpenCLManager::OpenCLManager(const rubics_config& c)
 
     // initialize kernel functors
     for (int i = 0; i < 6; ++i)
+    {
       move_functor.emplace_back(program, move_kernel_names[i]);
+      std::cout << "Initialized kernel " << move_kernel_names[i] << ".\n";
+    }
 
     // initialize all buffers
     for (int i = 0; i < LEVEL_COUNT; ++i)
@@ -151,27 +143,59 @@ void OpenCLManager::compute_round()
         }
       }
     }
-            // DEBUG
-    std::vector<rubics_config> host;
-    for (int level = 0; level < LEVEL_COUNT; ++level)
-    {
-      host.resize(BUFFER_SIZES[level]);
-      // blocking copy
-      cl::copy(
-        queue,
-        buffer_pool[level],
-        std::begin(host),
-        std::end(host)
-      );
-      // sanity check
-      for (int i = 0; i < BUFFER_SIZES[level]; ++i)
-        if (EMPTY_CONFIG == host[i])
-          std::cout << i;
-    }
-    queue.finish();
+    queue.finish();    
   }
   catch(cl::Error error)
   {
     std::cerr << "what(): " << error.what() << std::endl;
   }
+}
+
+bool OpenCLManager::move_correctness_check()
+{
+  try
+  {
+    // initialize output buffers
+    std::vector<cl::Buffer> buffer_vec;
+    for (int i = 0; i < 6; i++) 
+      buffer_vec.emplace_back(context, CL_MEM_WRITE_ONLY, sizeof(rubics_config));
+
+    // initialize input buffer
+    std::vector<rubics_config> host_vec(1, SOLVED_CONFIG);
+    cl::Buffer in_solved(context, std::begin(host_vec), std::end(host_vec), true); 
+
+    // enqueue the kernels
+    for (int functor_index = 0; functor_index < 6; ++functor_index)
+    {
+      move_functor[functor_index](
+        cl::EnqueueArgs(
+          queue,
+          cl::NDRange(1)             // global dimensions
+        ),
+        in_solved,                   // in buffer
+        buffer_vec[functor_index],   // out buffer
+        1,                           // count
+        0,                           // in offset
+        0                            // out offset
+      );
+    }
+    queue.finish();    
+    
+    // read the results and compare to the host
+    for (int functor_index = 0; functor_index < 6; ++functor_index)
+    {
+      cl::copy(queue, buffer_vec[functor_index], std::begin(host_vec), std::end(host_vec)); // blocking copy
+      rubics_config c = SOLVED_CONFIG;
+      host_move_functors[functor_index](&c, 1);
+      if (!(c == host_vec[0]))
+      {
+        std::cout << "right:\n" << c << "\nwrong:\n" << host_vec[0] << "\n";
+      }
+    }
+  }
+  catch(cl::Error error)
+  {
+    std::cerr << "what(): " << error.what() << std::endl;
+  }
+  return true;
 }
