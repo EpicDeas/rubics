@@ -34,17 +34,6 @@ inline bool operator==(const rubics_config& left, const rubics_config& right)
   return true;
 }
 
-inline bool equal_no_eval(const rubics_config& left, const rubics_config& right)
-{
-  auto left_no_eval = left;
-  left_no_eval.s[0] = left_no_eval.s[0] & first_bits_no_eval;
-
-  auto right_no_eval = right;
-  right_no_eval.s[0] = right_no_eval.s[0] & first_bits_no_eval;
-
-  return left_no_eval == right_no_eval;
-}
-
 inline std::ostream& operator<<(std::ostream& s, const rubics_config& c)
 {
   return s << c.s[0] << '\n' << c.s[1] << '\n'

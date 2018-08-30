@@ -18,20 +18,23 @@
 
 class OpenCLManager
 {
-  using move_functor_t = cl::make_kernel<cl::Buffer, cl::Buffer, int, const int, const int>;
+  using move_functor_t = cl::make_kernel<cl::Buffer, cl::Buffer, int, int, int>;
+  using reduce_functor_t = cl::make_kernel<cl::Buffer, cl::Buffer, int, int, int, int>;
 private:
   cl::Context      context;
   cl::CommandQueue queue;
   cl::Program      program;
 
   std::vector<cl::Buffer> buffer_pool;
-  std::vector<move_functor_t> move_functor;
+  std::vector<move_functor_t> move_functors;
+  reduce_functor_t reduce_functor;
 
   rubics_config init_config;
 
 public:
   OpenCLManager(const rubics_config& c);
   void compute_round();
+  void reduce();
   bool move_correctness_check();
 };
 

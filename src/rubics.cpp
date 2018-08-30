@@ -31,7 +31,7 @@ rubics_config parse_param(int argc, char** argv)
 int main(int argc, char** argv)
 {
   rubics_config config = parse_param(argc, argv);
-
+  
   generate_close_configs();
 
   // initialize OpenCL
@@ -46,6 +46,6 @@ int main(int argc, char** argv)
   }
 
   // run
-  //mng.compute_round();
+  mng.compute_round();
   return 0;
 }

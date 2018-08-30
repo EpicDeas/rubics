@@ -39,10 +39,6 @@ constexpr std::array<cl_uint, 5> first_bits {
   0b1111,
 };
 
-constexpr cl_uint first_bits_no_eval {
-  (1 << 26) - 1                       // first 25 bits
-};
-
 // get_edge_pos *******************************
 template <int N>
 inline cl_uint get_edge_pos (rubics_config* c,

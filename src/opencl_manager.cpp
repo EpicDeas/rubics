@@ -13,9 +13,8 @@
 #include "bit_mask.hpp"
 #include "opencl_manager.hpp"
 
-constexpr auto WORKGROUP_SIZE = 1024;
-
-constexpr auto LEVEL_COUNT = 4;
+constexpr size_t WORKGROUP_SIZE = 1024;
+constexpr size_t LEVEL_COUNT = 4;
 
 constexpr std::array<size_t, 5> BUFFER_SIZES {
   WORKGROUP_SIZE,
@@ -25,7 +24,7 @@ constexpr std::array<size_t, 5> BUFFER_SIZES {
   WORKGROUP_SIZE * 18 * 18 * 18 * 18
 };
 
-constexpr size_t MAIN_BUFFER_SIZE = 111151 * WORKGROUP_SIZE;
+constexpr size_t MAX_BUFFER_SIZE = BUFFER_SIZES[LEVEL_COUNT - 1];
 
 std::vector<rubics_config> init_pool_vec(rubics_config c)
 {
@@ -63,12 +62,13 @@ std::string read_file(const std::string& filename)
   };
 }
 
-OpenCLManager::OpenCLManager(const rubics_config& c)
+OpenCLManager::OpenCLManager(const rubics_config& c) :
+  reduce_functor(cl::Kernel())
 {
   init_config = c;
 
   context = cl::Context(CL_DEVICE_TYPE_DEFAULT);
-  auto file_str = read_file("src/kernels/moves.cl");
+  auto file_str = read_file("src/kernels/main_kernels.cl");
 
   try
   {
@@ -79,7 +79,7 @@ OpenCLManager::OpenCLManager(const rubics_config& c)
     // initialize kernel functors
     for (int i = 0; i < 6; ++i)
     {
-      move_functor.emplace_back(program, move_kernel_names[i]);
+      move_functors.emplace_back(program, move_kernel_names[i]);
       std::cout << "Initialized kernel " << move_kernel_names[i] << ".\n";
     }
 
@@ -116,18 +116,18 @@ void OpenCLManager::compute_round()
 {
   try
   {
-    for (int level = 0; level < LEVEL_COUNT - 1; ++level)
+    for (size_t level = 0; level < LEVEL_COUNT - 1; ++level)
     {
-      for (int in_offset = 0;
-               in_offset < BUFFER_SIZES[level];
-               in_offset += WORKGROUP_SIZE)
+      for (size_t in_offset = 0;
+                  in_offset < BUFFER_SIZES[level];
+                  in_offset += WORKGROUP_SIZE)
       {
         for (int functor_index = 0; functor_index < 6; ++functor_index)
         {
-          for (int count = 0; count < 3; ++count)
+          for (int count = 1; count <= 3; ++count)
           {
             auto out_offset = in_offset * 18 + (functor_index * 3 + count) * WORKGROUP_SIZE;
-            move_functor[functor_index](
+            move_functors[functor_index](
               cl::EnqueueArgs(
                 queue,
                 cl::NDRange(WORKGROUP_SIZE),        // global dimensions
@@ -143,11 +143,50 @@ void OpenCLManager::compute_round()
         }
       }
     }
-    queue.finish();    
+    queue.finish();
   }
   catch(cl::Error error)
   {
     std::cerr << "what(): " << error.what() << std::endl;
+    exit(1);
+  }
+}
+
+void OpenCLManager::reduce()
+{
+  try
+  {
+    for (size_t level = LEVEL_COUNT - 1; level > 0; --level)
+    {
+      for (size_t out_offset_rough = 0;
+                  out_offset_rough < BUFFER_SIZES[level - 1];
+                  out_offset_rough += WORKGROUP_SIZE)
+      {
+        for (int i = 0; i < 18; ++i)
+        {
+          size_t in_offset = 18 * out_offset_rough + i * WORKGROUP_SIZE;
+          size_t out_offset = out_offset_rough + i * 50; // write with stride of 50 words
+          reduce_functor(
+            cl::EnqueueArgs(
+              queue,
+              cl::NDRange(WORKGROUP_SIZE),   // global dimensions
+              cl::NDRange(WORKGROUP_SIZE)    // local dimensions
+            ),
+            buffer_pool[level],              // in buffer
+            buffer_pool[level - 1],          // out buffer
+            in_offset,                       // in offset
+            WORKGROUP_SIZE,                  // in size
+            out_offset,                      // out offset
+            18                               // out size
+          );
+        }
+      }
+    }
+  }
+  catch(cl::Error error)
+  {
+    std::cerr << "what(): " << error.what() << std::endl;
+    exit(1);
   }
 }
 
@@ -167,7 +206,7 @@ bool OpenCLManager::move_correctness_check()
     // enqueue the kernels
     for (int functor_index = 0; functor_index < 6; ++functor_index)
     {
-      move_functor[functor_index](
+      move_functors[functor_index](
         cl::EnqueueArgs(
           queue,
           cl::NDRange(1)             // global dimensions

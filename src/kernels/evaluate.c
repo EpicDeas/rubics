@@ -1,10 +1,5 @@
 // last 7 bits of c.w contain the evaluation
 
-#define EVAL_MASK (127 << 25)
-
-#define WRITE_EVAL(c, eval)\
-  c->w = (c->w & ~EVAL_MASK) | (eval << 25);
-
 #define SOLVED_CONFIG\
   ((rubics_config)(33296, 107843, 182390, 256937))
 
@@ -21,27 +16,25 @@
     diff += temp & VERTEX_ORI(j) ? 1 : 0;\
   }
 
-uint compute_diff(
-  rubics_config* c,
-  __constant const rubics_config* d)
+uint compute_diff(rubics_config* c, int close_configs_index)
 {
   uint diff = 0;
   uint temp;
 
-  ADD_DIFF(c,d,x)
-  ADD_DIFF(c,d,y)
-  ADD_DIFF(c,d,z)
-  ADD_DIFF(c,d,w)
+  ADD_DIFF(c,CLOSE_CONFIGS[close_configs_index],x)
+  ADD_DIFF(c,CLOSE_CONFIGS[close_configs_index],y)
+  ADD_DIFF(c,CLOSE_CONFIGS[close_configs_index],z)
+  ADD_DIFF(c,CLOSE_CONFIGS[close_configs_index],w)
   
   return diff;
 }
 
-void evaluate(rubics_config* c)
+uint evaluate(rubics_config* c)
 {
   uint diff = 100;
   
   for (int i = 0; i < CLOSE_CONFIGS_COUNT; ++i)
-    diff = min(diff, compute_diff(c, &CLOSE_CONFIGS[i]));
+    diff = min(diff, compute_diff(c, i));
 
-  WRITE_EVAL(c, diff)
+  return diff;
 }

@@ -20,7 +20,6 @@ void move_##X(                                                       \
          VA, VB, VC, VD,                                             \
          &config, edge_ori, vertex_ori);                             \
                                                                      \
-  evaluate(&config);                                                 \
   out[gid + out_offset] = config;                                    \
 }
 
@@ -42,3 +41,18 @@ MOVE(U, 0, 1, 2, 3,
 MOVE(D, 8, 9, 10, 11,
         4, 5, 6, 7, false, 0)
 
+
+__kernel
+void reduce(
+  __global const rubics_config* restrict in,
+  __global       rubics_config* restrict out,
+  const int in_offset,
+  const int in_size,
+  const int out_offset,
+  const int in_size)
+{
+  int lid = get_local_id(0);
+  rubics_config config = in[in_offset];
+  int eval = evaluate(config);
+
+}
